@@ -7,4 +7,3 @@
 
 del *.obj
 del *.exp
-del *.lib

@@ -7,6 +7,8 @@
 #pragma comment (lib, "comctl32.lib")
 #pragma comment (lib, "comdlg32.lib")
 
+#pragma comment (lib, "zdll.lib")
+
 
 #include <windows.h>
 #include <commctrl.h>

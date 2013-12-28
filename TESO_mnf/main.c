@@ -3,6 +3,8 @@
 HINSTANCE	hInst;
 int			ScreenWidth;
 int			ScreenHeigth;
+WNDPROC     g_wndProcOriginalListViewHeader;
+HWND 		listView;
 
 LRESULT CALLBACK MainProc(HWND Dlg,UINT message,WPARAM wParam,LPARAM lParam);
 
@@ -45,6 +47,114 @@ BOOL OpenMNFFiles(HWND hwnd)
 	return ReadMNF(hf);
 }
 
+LRESULT WndProcListViewHeader(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+   switch(msg)
+   {
+      case WM_NOTIFY:
+      {
+         // Catch the resize messages for the ListView Header and abort the resizing
+         NMHDR *nmhdr = (NMHDR*)lParam;
+         if (HDN_BEGINTRACKW == nmhdr->code || HDN_BEGINTRACKA == nmhdr->code)
+         {
+            return TRUE;
+         }
+		 break;
+      }
+      /*case WM_SETCURSOR:
+      {
+         return TRUE;
+      }
+      case WM_LBUTTONDBLCLK:
+      {
+         return TRUE;
+      }*/
+   }
+   return CallWindowProc(g_wndProcOriginalListViewHeader, hWnd, msg, wParam, lParam);
+}
+
+void ListViewAddItems(struct entry_table3 *Entry)
+{
+	LVITEM lvItem;
+	char Buf[0x100]; 
+   
+   lvItem.mask = LVIF_TEXT;
+
+   lvItem.iItem = 0;
+   sprintf(Buf, "%08X", Entry->UncompSize);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 0;
+   SendMessage(listView, LVM_INSERTITEM, 0, (LPARAM)&lvItem);
+   sprintf(Buf, "%08X", Entry->CompSize);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 1;
+   ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%08X", Entry->unk_0);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 2;
+   ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%08X", Entry->Offset);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 3;
+   ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%08X", Entry->Type);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 4;
+   ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%08X", Entry->ArchiveNum);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 5;
+   ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%08X", Entry->unk_1);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 6;
+   ListView_SetItem(listView, &lvItem);
+}
+
+BOOL InitColumn(HWND hWin)
+{
+    LVCOLUMN lvc;   // listview column
+	HWND hwndListViewHeader;
+
+    listView = GetDlgItem(hWin,IDC_LISTVIEW);  //pointer to the listView
+	hwndListViewHeader = ListView_GetHeader(listView);
+	g_wndProcOriginalListViewHeader = (WNDPROC)SetWindowLong(listView, GWLP_WNDPROC, (LONG_PTR)WndProcListViewHeader);	
+	
+    lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;   // authorized actionss
+    lvc.fmt = LVCFMT_LEFT;     //alignement
+
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "Unk1"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "Archive"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "Type"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "Offset"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "Unk"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;               // width in pixels
+    lvc.pszText = "CSize"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);	
+	
+    lvc.cx = 70;   // width in pixels
+    lvc.pszText = "Size"; // Name of the column
+    ListView_InsertColumn(listView, 0, &lvc);
+
+	printf("[+] InitColumn\n");
+	return TRUE;
+}
+
 int main(void)
 {
 	HWND console;
@@ -69,6 +179,7 @@ LRESULT CALLBACK MainProc(HWND hWin,UINT message,WPARAM wParam,LPARAM lParam)
    {
    case WM_INITDIALOG:
 	   {
+			InitColumn(hWin);
 			break;
 	   }
    case WM_COMMAND:

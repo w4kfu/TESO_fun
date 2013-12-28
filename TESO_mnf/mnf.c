@@ -1,5 +1,19 @@
 #include "mnf.h"
 
+void DumpFiles(unsigned char *buf, size_t size, char *name)
+{
+	FILE *fp;
+	
+	fp = fopen(name, "w");
+	if (!fp)
+	{
+		printf("[-] DumpFiles\n");
+		return;
+	}
+	fwrite(buf, 1, size, fp);
+	fclose(fp);
+}
+
 void hex_dump(void *data, size_t size)
 {
 	unsigned char *p =(unsigned char*)data;
@@ -57,6 +71,33 @@ void PrintMNFHeader(struct mnf_header *head)
 	printf("TotalSize    = 0x%08X\n", head->TotalSize);
 }
 
+void ExtractTable3(DWORD dwFileCount_1, struct comp_buf *block_2, struct comp_buf *block_3)
+{
+	struct entry_table3 entry;
+	DWORD dwFileNum;
+	DWORD dwUnk;
+	unsigned char *pB2;
+	unsigned char *pB3;
+	DWORD i;
+	
+	pB2 = block_2->buf_uncomp;
+	pB3 = block_3->buf_uncomp;
+	for (i = 0; i < dwFileCount_1; i++)
+	{
+		dwFileNum = *(DWORD*)pB2;
+		pB2 += 4;
+		dwUnk = *(DWORD*)pB2;
+		pB2 += 4;
+		memcpy(&entry, pB3, sizeof (struct entry_table3));
+		pB3 += sizeof (struct entry_table3);
+		//printf("[+] dwFileNum = %08X (%d)\n", dwFileNum, dwFileNum);
+		//printf("[+] dwUnk = %08X (%d)\n", dwUnk, dwUnk);	
+		ListViewAddItems(&entry);
+		//if (i > 5)
+			//break;
+	}
+}
+
 BOOL ReadMNF(HANDLE h)
 {
 	struct mnf_header MNFh;
@@ -64,6 +105,9 @@ BOOL ReadMNF(HANDLE h)
 	BYTE unk[0xA];
 	DWORD dwFileCount_1;
 	DWORD dwFileCount_2;
+	struct comp_buf *block_1 = NULL;
+	struct comp_buf *block_2 = NULL;
+	struct comp_buf *block_3 = NULL;
 	
 	memset(&MNFh, 0, MNF_HEADER_SIZE);
 
@@ -85,6 +129,12 @@ BOOL ReadMNF(HANDLE h)
 	dwFileCount_2 = swap_uint32(dwFileCount_2);
 	printf("dwFileCount_1 = 0x%08X (%d)\n", dwFileCount_1, dwFileCount_1);
 	printf("dwFileCount_2 = 0x%08X (%d)\n", dwFileCount_2, dwFileCount_2);
-	UncompData(h);
+	block_1 = UncompData(h);
+	DumpFiles(block_1->buf_uncomp, block_1->uncomp_size, "table1.bin");
+	block_2 = UncompData(h);
+	DumpFiles(block_2->buf_uncomp, block_2->uncomp_size, "table2.bin");
+	block_3 = UncompData(h);
+	DumpFiles(block_3->buf_uncomp, block_3->uncomp_size, "table3.bin");
+	ExtractTable3(dwFileCount_1, block_2, block_3);
 	return TRUE;
 }

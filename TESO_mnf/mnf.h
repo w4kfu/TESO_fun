@@ -22,6 +22,19 @@ struct mnf_header
 };
 #pragma pack(pop)
 
+#pragma pack(push,1)
+struct entry_table3
+{
+	unsigned int UncompSize;
+	unsigned int CompSize;
+	unsigned int unk_0;
+	unsigned int Offset;
+	unsigned char Type;
+	unsigned char ArchiveNum;
+	unsigned short unk_1;
+};
+#pragma pack(pop)
+
 BOOL ReadMNF(HANDLE h);
 
 #endif
