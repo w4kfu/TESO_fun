@@ -15,5 +15,6 @@
 
 #include "resource.h"
 #include "mnf.h"
+#include "buffer.h"
 
 #endif

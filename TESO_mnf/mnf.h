@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#include "buffer.h"
+
 # define MNF_SIG	0x3253454D
 
 # define MNF_HEADER_SIZE sizeof (struct mnf_header)
