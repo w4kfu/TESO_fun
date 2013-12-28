@@ -9,6 +9,11 @@
 
 # define MNF_SIG	0x3253454D
 
+# define TYPE_WAVE	0x46464952
+# define TYPE_DDS	1
+# define TYPE_ZOS	2
+# define TYPE_BKHD	0x44484B42
+
 # define MNF_HEADER_SIZE sizeof (struct mnf_header)
 
 #pragma pack(push,1)
@@ -35,6 +40,7 @@ struct entry_table3
 };
 #pragma pack(pop)
 
-BOOL ReadMNF(HANDLE h);
+BOOL ReadMNF(HANDLE h, char *FileName);
+char *TypeFile(DWORD dwType);
 
 #endif

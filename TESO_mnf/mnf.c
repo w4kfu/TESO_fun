@@ -1,5 +1,20 @@
 #include "mnf.h"
 
+extern void ListViewAddItems(struct entry_table3 *Entry, DWORD dwType);
+
+char *TypeFile(DWORD dwType)
+{
+	switch (dwType)
+	{
+		case TYPE_WAVE:
+			return "WAV";
+		case TYPE_BKHD:
+			return "BKHD";
+		default:
+			return "UNKNOW";
+	}
+}
+
 void DumpFiles(unsigned char *buf, size_t size, char *name)
 {
 	FILE *fp;
@@ -71,7 +86,41 @@ void PrintMNFHeader(struct mnf_header *head)
 	printf("TotalSize    = 0x%08X\n", head->TotalSize);
 }
 
-void ExtractTable3(DWORD dwFileCount_1, struct comp_buf *block_2, struct comp_buf *block_3)
+void ExtractFile(char *FileName, struct entry_table3 *entry)
+{
+
+
+}
+
+DWORD GetTypeFile(char *BaseName, struct entry_table3 *entry)
+{
+	char FileName[MAX_PATH];
+	FILE *fp;
+	unsigned char buf[4] = {0xEF, 0xBE, 0xAD, 0xDE};
+	
+	sprintf(FileName, "%s%04d.dat", BaseName, entry->ArchiveNum);
+	fp = fopen(FileName, "r");
+	if (!fp)
+	{
+		printf("[-] fopen(%s) failed\n", FileName);
+		return 0;
+	}
+	fseek(fp, entry->Offset, SEEK_SET);
+	if (entry->Type != 0)
+	{
+		printf("[-] TYPE NOT YET SUPPORTED !\n");
+	}
+	else
+	{
+		fread(buf, 1, 4, fp);
+		if (*(DWORD*)buf != TYPE_WAVE)
+			printf("%08X : %s (Offset : %08X)\n", *(DWORD*)buf, FileName, entry->Offset);
+	}
+	fclose(fp);
+	return *(DWORD*)buf;
+}
+
+void ExtractTable3(DWORD dwFileCount_1, struct comp_buf *block_2, struct comp_buf *block_3, char *FileName)
 {
 	struct entry_table3 entry;
 	DWORD dwFileNum;
@@ -79,6 +128,7 @@ void ExtractTable3(DWORD dwFileCount_1, struct comp_buf *block_2, struct comp_bu
 	unsigned char *pB2;
 	unsigned char *pB3;
 	DWORD i;
+	DWORD dwType;
 	
 	pB2 = block_2->buf_uncomp;
 	pB3 = block_3->buf_uncomp;
@@ -91,14 +141,18 @@ void ExtractTable3(DWORD dwFileCount_1, struct comp_buf *block_2, struct comp_bu
 		memcpy(&entry, pB3, sizeof (struct entry_table3));
 		pB3 += sizeof (struct entry_table3);
 		//printf("[+] dwFileNum = %08X (%d)\n", dwFileNum, dwFileNum);
-		//printf("[+] dwUnk = %08X (%d)\n", dwUnk, dwUnk);	
-		ListViewAddItems(&entry);
+		//printf("[+] dwUnk = %08X (%d)\n", dwUnk, dwUnk);
+		if (entry.UncompSize > 0x30000)
+		{
+			dwType = GetTypeFile(FileName, &entry);
+			ListViewAddItems(&entry, dwType);
+		}
 		//if (i > 5)
 			//break;
 	}
 }
 
-BOOL ReadMNF(HANDLE h)
+BOOL ReadMNF(HANDLE h, char *FileName)
 {
 	struct mnf_header MNFh;
 	DWORD dwRead;
@@ -135,6 +189,6 @@ BOOL ReadMNF(HANDLE h)
 	DumpFiles(block_2->buf_uncomp, block_2->uncomp_size, "table2.bin");
 	block_3 = UncompData(h);
 	DumpFiles(block_3->buf_uncomp, block_3->uncomp_size, "table3.bin");
-	ExtractTable3(dwFileCount_1, block_2, block_3);
+	ExtractTable3(dwFileCount_1, block_2, block_3, FileName);
 	return TRUE;
 }

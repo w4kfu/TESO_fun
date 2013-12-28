@@ -13,7 +13,7 @@ BOOL OpenMNFFiles(HWND hwnd)
 	OPENFILENAME ofn;
 	char szFile[MAX_PATH];
 	HANDLE hf;
-
+	char *p;
 
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
@@ -44,7 +44,13 @@ BOOL OpenMNFFiles(HWND hwnd)
 		printf("[-] CreateFile()\n");
 		return FALSE;
 	}
-	return ReadMNF(hf);
+	p = strrchr(ofn.lpstrFile, '.');
+	if (p)
+	{
+		*p = 0;
+	}
+	printf("[+] FileName = %s\n", ofn.lpstrFile);
+	return ReadMNF(hf, ofn.lpstrFile);
 }
 
 LRESULT WndProcListViewHeader(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -53,13 +59,11 @@ LRESULT WndProcListViewHeader(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
    {
       case WM_NOTIFY:
       {
-         // Catch the resize messages for the ListView Header and abort the resizing
          NMHDR *nmhdr = (NMHDR*)lParam;
          if (HDN_BEGINTRACKW == nmhdr->code || HDN_BEGINTRACKA == nmhdr->code)
          {
             return TRUE;
          }
-		 break;
       }
       /*case WM_SETCURSOR:
       {
@@ -73,7 +77,7 @@ LRESULT WndProcListViewHeader(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
    return CallWindowProc(g_wndProcOriginalListViewHeader, hWnd, msg, wParam, lParam);
 }
 
-void ListViewAddItems(struct entry_table3 *Entry)
+void ListViewAddItems(struct entry_table3 *Entry, DWORD dwType)
 {
 	LVITEM lvItem;
 	char Buf[0x100]; 
@@ -109,46 +113,55 @@ void ListViewAddItems(struct entry_table3 *Entry)
    lvItem.pszText = Buf;
    lvItem.iSubItem = 6;
    ListView_SetItem(listView, &lvItem);
+   sprintf(Buf, "%s (%08X)", TypeFile(dwType), dwType);
+   lvItem.pszText = Buf;
+   lvItem.iSubItem = 7;
+   ListView_SetItem(listView, &lvItem);
 }
 
 BOOL InitColumn(HWND hWin)
 {
-    LVCOLUMN lvc;   // listview column
+    LVCOLUMN lvc;
 	HWND hwndListViewHeader;
 
-    listView = GetDlgItem(hWin,IDC_LISTVIEW);  //pointer to the listView
+    listView = GetDlgItem(hWin,IDC_LISTVIEW);
+	ListView_SetExtendedListViewStyle(listView, ListView_GetExtendedListViewStyle(listView) | LVS_EX_FULLROWSELECT);
 	hwndListViewHeader = ListView_GetHeader(listView);
 	g_wndProcOriginalListViewHeader = (WNDPROC)SetWindowLong(listView, GWLP_WNDPROC, (LONG_PTR)WndProcListViewHeader);	
 	
-    lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;   // authorized actionss
-    lvc.fmt = LVCFMT_LEFT;     //alignement
+    lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvc.fmt = LVCFMT_LEFT;
 
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "Unk1"; // Name of the column
+    lvc.cx = 130;
+    lvc.pszText = "FMT";
+    ListView_InsertColumn(listView, 0, &lvc);		
+	
+    lvc.cx = 70;
+    lvc.pszText = "Unk1";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "Archive"; // Name of the column
+    lvc.cx = 70;
+    lvc.pszText = "Archive";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "Type"; // Name of the column
+    lvc.cx = 70;
+    lvc.pszText = "Type";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "Offset"; // Name of the column
+    lvc.cx = 70;
+    lvc.pszText = "Offset";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "Unk"; // Name of the column
+    lvc.cx = 70;
+    lvc.pszText = "Unk";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;               // width in pixels
-    lvc.pszText = "CSize"; // Name of the column
+    lvc.cx = 70;
+    lvc.pszText = "CSize";
     ListView_InsertColumn(listView, 0, &lvc);	
 	
-    lvc.cx = 70;   // width in pixels
-    lvc.pszText = "Size"; // Name of the column
+    lvc.cx = 90;
+    lvc.pszText = "Size";
     ListView_InsertColumn(listView, 0, &lvc);
 
 	printf("[+] InitColumn\n");
