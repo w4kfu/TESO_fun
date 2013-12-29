@@ -86,10 +86,46 @@ void PrintMNFHeader(struct mnf_header *head)
 	printf("TotalSize    = 0x%08X\n", head->TotalSize);
 }
 
-void ExtractFile(char *FileName, struct entry_table3 *entry)
+void ExtractFile(char *BaseName, struct entry_table3 *entry)
 {
+	char FileName[MAX_PATH];
+	FILE *fp_in;
+	FILE *fp_out;
+	unsigned char *buf = NULL;
 
-
+	sprintf(FileName, "%s%04d.dat", BaseName, entry->ArchiveNum);
+	fp_in = fopen(FileName, "r");
+	if (!fp_in)
+	{
+		printf("[-] fopen(%s) failed\n", FileName);
+		return;
+	}
+	fseek(fp_in, entry->Offset, SEEK_SET);
+	if (entry->Type != 0)
+	{
+		printf("[-] TYPE NOT YET SUPPORTED !\n");
+	}
+	else
+	{
+		buf = malloc(sizeof (char) * entry->UncompSize);
+		if (buf)
+		{
+			fread(buf, 1, entry->UncompSize, fp_in);
+			fp_out = fopen("C:\\Temp\\roo.wav", "w");
+			if (fp_out)
+			{
+				fwrite(buf, 1, entry->UncompSize, fp_out);
+				fclose(fp_out);
+			}
+			else
+			{
+				printf("[-] fopen(%s) failed\n", FileName);
+				return;			
+			}
+			free(buf);
+		}
+	}
+	fclose(fp_in);
 }
 
 DWORD GetTypeFile(char *BaseName, struct entry_table3 *entry)

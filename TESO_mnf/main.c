@@ -50,6 +50,7 @@ BOOL OpenMNFFiles(HWND hwnd)
 		*p = 0;
 	}
 	printf("[+] FileName = %s\n", ofn.lpstrFile);
+	SetWindowText(GetDlgItem(hwnd, IDC_FILENAME), ofn.lpstrFile);
 	return ReadMNF(hf, ofn.lpstrFile);
 }
 
@@ -168,6 +169,56 @@ BOOL InitColumn(HWND hWin)
 	return TRUE;
 }
 
+void Extract(HWND hWin)
+{
+	char szFile[MAX_PATH];
+	DWORD dwSelected;
+	char szText[MAX_PATH];
+	struct entry_table3 entry;
+	char *p;
+
+
+	GetWindowText(GetDlgItem(hWin, IDC_FILENAME), szFile, MAX_PATH);
+	if (!strcmp(szFile, ""))
+	{
+		printf("[-] Open file first\n");
+		return;
+	}
+	dwSelected = ListView_GetNextItem(GetDlgItem(hWin, IDC_LISTVIEW), -1, LVNI_SELECTED);
+	printf("[+] Select = %d\n", dwSelected);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 0, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.UncompSize = strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 1, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.CompSize = strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 2, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.unk_0 = strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 3, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.Offset = strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 4, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.Type = (unsigned char)strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 5, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.ArchiveNum = (unsigned char)strtol(szText, &p, 16);
+	ListView_GetItemText(GetDlgItem(hWin, IDC_LISTVIEW), dwSelected, 6, szText, MAX_PATH);
+	printf("TEXT = %s\n", szText);
+	entry.unk_1 = (unsigned short)strtol(szText, &p, 16);
+	
+	printf("[+] UncompSize = %08X\n", entry.UncompSize);
+	printf("[+] CompSize = %08X\n", entry.CompSize);
+	printf("[+] unk_0 = %08X\n", entry.unk_0);
+	printf("[+] Offset = %08X\n", entry.Offset);
+	printf("[+] Type = %08X\n", entry.Type);
+	printf("[+] ArchiveNum = %08X\n", entry.ArchiveNum);
+	printf("[+] unk_1 = %08X\n", entry.unk_1);
+	ExtractFile(szFile, &entry);
+}
+
+
 int main(void)
 {
 	HWND console;
@@ -195,6 +246,15 @@ LRESULT CALLBACK MainProc(HWND hWin,UINT message,WPARAM wParam,LPARAM lParam)
 			InitColumn(hWin);
 			break;
 	   }
+	case WM_CONTEXTMENU:
+	{
+		if ((HWND)wParam == GetDlgItem(hWin, IDC_LISTVIEW)) 
+		{
+			HMENU hmenu = LoadMenu(hInst, MAKEINTRESOURCE(IDM_MNU_EXTRACT));
+			TrackPopupMenu(GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hWin, NULL); 
+		}
+		break;
+	}
    case WM_COMMAND:
 			Select = LOWORD(wParam);
 			switch(Select)
@@ -210,7 +270,12 @@ LRESULT CALLBACK MainProc(HWND hWin,UINT message,WPARAM wParam,LPARAM lParam)
 					{
 						SendMessage(hWin, WM_CLOSE, 0, 0);
 						break;
-					}			
+					}
+				case IDM_EXTRACT:
+					{
+						printf("[+] EXTRACT !\n");
+						Extract(hWin);
+					}
 				default:
 					break;
 			}

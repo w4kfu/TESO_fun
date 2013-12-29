@@ -42,5 +42,6 @@ struct entry_table3
 
 BOOL ReadMNF(HANDLE h, char *FileName);
 char *TypeFile(DWORD dwType);
+void ExtractFile(char *BaseName, struct entry_table3 *entry);
 
 #endif
