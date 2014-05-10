@@ -297,4 +297,5 @@ void setup_all_hook(void)
 	setup_Hook_connect();
 	setup_Hook_recv();
 	setup_Hook_send();
+	setup_Hook_closesocket();
 }
