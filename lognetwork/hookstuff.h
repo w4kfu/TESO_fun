@@ -31,6 +31,8 @@ struct SockMonitor
 	BYTE PrivateKeyClient_02[0x14];
 	BYTE PrivateKeyClient_03[0x14];
 	BYTE PrivateKeyClient_04[0x14];
+	BOOL PrivKeySet;
+	BOOL KeySet;
 	CTR_Mode<AES>::Decryption d_recv;
 	CTR_Mode<AES>::Decryption d_send;
 
@@ -40,6 +42,8 @@ struct SockMonitor
 		addr = a;
 		port = p;
 		encrypted = FALSE;
+		KeySet = FALSE;
+		PrivKeySet = FALSE;
 	}
 };
 

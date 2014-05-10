@@ -117,6 +117,7 @@ VOID GetPrivateKey(struct SockMonitor *smon)
 	}
 	//Sleep(4000);
 	SuspendAllThreads(FALSE);
+	smon->PrivKeySet = TRUE;
 }
 
 VOID GenAESKey(struct SockMonitor *smon, BYTE *key_01_pub_server, BYTE *key_04_pub_server, BYTE *IV)
@@ -176,6 +177,7 @@ VOID GenAESKey(struct SockMonitor *smon, BYTE *key_01_pub_server, BYTE *key_04_p
 	SecByteBlock key2(SHA256::DIGESTSIZE);
 	SHA256().CalculateDigest(key2, sharedA, sharedA.size()); 
 	smon->d_send.SetKeyWithIV(key2, aesKeyLength, IV);
+	smon->KeySet = TRUE;
 }
 
 VOID Handle_0x2B10(struct SockMonitor *smon, struct PacketBuf *p)
@@ -262,6 +264,11 @@ VOID Handle_0x2B0A(struct SockMonitor *smon, struct PacketBuf *p)
 	if (GetByte(p, &unk_byte_00) == FALSE)
 		return;
 	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);
+	if (smon->KeySet != TRUE || smon->PrivKeySet != TRUE)
+	{
+		dbg_msg("Setting encryption to TRUE without key\n");
+		ExitProcess(0);
+	}
 	smon->encrypted = TRUE;
 }
 
@@ -412,6 +419,11 @@ VOID Handle_0x010A(struct SockMonitor *smon, struct PacketBuf *p)
 	if (GetByte(p, &unk_byte_00) == FALSE)
 		return;
 	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);
+	if (smon->KeySet != TRUE || smon->PrivKeySet != TRUE)
+	{
+		dbg_msg("Setting encryption to TRUE without key\n");
+		ExitProcess(0);
+	}
 	smon->encrypted = TRUE;
 }
 

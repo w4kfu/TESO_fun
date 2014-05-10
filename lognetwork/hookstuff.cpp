@@ -126,7 +126,7 @@ int __stdcall Hook_connect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_
 	port = ntohs(serv->sin_port);
 
 	dbg_msg("[+] Connect to %s:%d\n", addr, port);
-	if (port != 443)
+	if (port != 443 && port != 80)
 	{
 		lsock.push_back(new SockMonitor(s, addr, port));
 	}
