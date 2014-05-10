@@ -6,6 +6,8 @@ std::list<SockMonitor*> lsock;
 
 int (__stdcall *Resume_connect)(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int namelen) = NULL;
 
+int (__stdcall *Resume_closesocket)(_In_  SOCKET s) = NULL;
+
 int (__stdcall *Resume_WSARecv)(
   _In_     SOCKET s,
   _Inout_  LPWSABUF lpBuffers,
@@ -123,8 +125,7 @@ int __stdcall Hook_connect(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_
 	addr = inet_ntoa(serv->sin_addr);
 	port = ntohs(serv->sin_port);
 
-	dbg_msg("[+] connect called !\n");
-	dbg_msg("[+] serv : %s:%d\n", addr, port);
+	dbg_msg("[+] Connect to %s:%d\n", addr, port);
 	if (port != 443)
 	{
 		lsock.push_back(new SockMonitor(s, addr, port));
@@ -220,6 +221,22 @@ int __stdcall Hook_WSASend(
 	return (ret);
 }
 
+int __stdcall Hook_closesocket(_In_   SOCKET s)
+{
+  	std::list<SockMonitor*>::const_iterator lit (lsock.begin()), lend(lsock.end());
+
+  	for (; lit != lend; ++lit)
+  	{
+  		if ((*lit)->s == s)
+  		{
+  			dbg_msg("[+] Disconnect from %s:%d\n", (*lit)->addr.c_str(), (*lit)->port);
+  			lsock.remove(*lit);
+  			break;
+  		}
+  	}
+  	return Resume_closesocket(s);
+}
+
 void setup_Hook_VirtualProtect(void)
 {
 	/*Resume_VirtualProtect = (BOOL(__stdcall *)(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -264,6 +281,15 @@ LPWSAOVERLAPPED,
 LPWSAOVERLAPPED_COMPLETION_ROUTINE))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	memset(Resume_WSASend, 0x90, 0x1000);
 	setup_hook("Ws2_32.dll", "WSASend", &Hook_WSASend, Resume_WSASend, 0);
+}
+
+void setup_Hook_closesocket(void)
+{
+	LoadLibraryA("Ws2_32.dll");
+
+	Resume_closesocket = (int(__stdcall *)(SOCKET))VirtualAlloc(0, 0x1000, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	memset(Resume_closesocket, 0x90, 0x1000);
+	setup_hook("Ws2_32.dll", "closesocket", &Hook_closesocket, Resume_closesocket, 0);
 }
 
 void setup_all_hook(void)
