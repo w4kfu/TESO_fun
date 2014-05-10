@@ -15,6 +15,34 @@
 #include "dbg.h"
 #include "packet.h"
 
+#include "cryptopp/aes.h"
+using CryptoPP::AES;
+
+#include "cryptopp/modes.h"
+using CryptoPP::CTR_Mode;
+
+struct SockMonitor
+{
+	SOCKET s;
+	std::string addr;
+	DWORD port;
+	BOOL encrypted;
+	BYTE PrivateKeyClient_01[0x14];
+	BYTE PrivateKeyClient_02[0x14];
+	BYTE PrivateKeyClient_03[0x14];
+	BYTE PrivateKeyClient_04[0x14];
+	CTR_Mode<AES>::Decryption d_recv;
+	CTR_Mode<AES>::Decryption d_send;
+
+	SockMonitor(SOCKET sock, char *a, DWORD p)
+	{
+		s = sock;
+		addr = a;
+		port = p;
+		encrypted = FALSE;
+	}
+};
+
 #define LDE_X86 0
 
 #ifdef __cplusplus

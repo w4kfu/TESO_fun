@@ -72,7 +72,7 @@ VOID DumpKeys(struct CKey *ckey)
 
 #define SIZE_PATTERN_KEY (8 * 5)
 
-BOOL Scan4Key(VOID)
+BOOL Scan4Key(BYTE *PrivateKeyClient_01, BYTE *PrivateKeyClient_02, BYTE *PrivateKeyClient_03, BYTE *PrivateKeyClient_04)
 {
 	DWORD i;
 	DWORD Limit = 0x80000000; //0xC0000000 : 0x80000000;
@@ -85,7 +85,7 @@ BOOL Scan4Key(VOID)
 	struct CKey *ckey = NULL;
 	BYTE PageBuffer[0x1000];
 	SIZE_T BytesRead = 0;
-	DWORD OldProtect;
+	//DWORD OldProtect;
 
 	i = 0x2389000;
 	for (i = 0x0; i < Limit; i++)
@@ -129,6 +129,10 @@ BOOL Scan4Key(VOID)
 					{
 						dbg_msg("[+] FOUND !\n");
 						DumpKeys(ckey);
+						memcpy(PrivateKeyClient_01, ckey->bKeyPriv_01, 0x14);
+						memcpy(PrivateKeyClient_02, ckey->bKeyPriv_02, 0x14);
+						memcpy(PrivateKeyClient_03, ckey->bKeyPriv_03, 0x14);
+						memcpy(PrivateKeyClient_04, ckey->bKeyPriv_04, 0x14);
 						return TRUE;
 					}
 				//bData += 1;

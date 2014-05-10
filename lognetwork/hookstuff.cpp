@@ -1,5 +1,7 @@
 #include "hookstuff.h"
 
+std::list<SockMonitor*> lsock;
+
 //BOOL (__stdcall *Resume_VirtualProtect)(LPVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect) = NULL;
 
 int (__stdcall *Resume_connect)(_In_ SOCKET s, _In_ const struct sockaddr *name, _In_ int namelen) = NULL;
@@ -23,23 +25,6 @@ int (__stdcall *Resume_WSASend)(
   _In_   LPWSAOVERLAPPED lpOverlapped,
   _In_   LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 ) = NULL;
-
-struct SockMonitor
-{
-	SOCKET s;
-	std::string addr;
-	DWORD port;
-
-
-	SockMonitor(SOCKET sock, char *a, DWORD p)
-	{
-		s = sock;
-		addr = a;
-		port = p;
-	}
-};
-
-std::list<SockMonitor*> lsock;
 
 void setup_hook(char *module, char *name_export, void *Hook_func, void *trampo, DWORD addr)
 {
@@ -183,7 +168,7 @@ int __stdcall Hook_WSARecv(
   	{
   		if ((*lit)->s == s)
   		{
-			dbg_msg("[+] WSARecv : %s:%d\n", (*lit)->addr.c_str(), (*lit)->port);
+			dbg_msg("[+] WSARecv : %s:%d (encrypted: %s)\n", (*lit)->addr.c_str(), (*lit)->port, ((*lit)->encrypted == FALSE) ? "FALSE" : "TRUE");
 			if (dwBufferCount != 1)
 			{
 				dbg_msg("[-] dwBufferCount != 1");
@@ -193,7 +178,7 @@ int __stdcall Hook_WSARecv(
 				}
 			}
 			hexdump(lpBuffers[0].buf, *lpNumberOfBytesRecvd);
-			ParsePacketServ((BYTE*)lpBuffers[0].buf, *lpNumberOfBytesRecvd);
+			ParsePacketServ(*lit, (BYTE*)lpBuffers[0].buf, *lpNumberOfBytesRecvd);
 			break;
   		}
   	}
@@ -218,7 +203,7 @@ int __stdcall Hook_WSASend(
   	{
   		if ((*lit)->s == s)
   		{
-			dbg_msg("[+] WSASend : %s:%d\n", (*lit)->addr.c_str(), (*lit)->port);
+			dbg_msg("[+] WSASend : %s:%d (encrypted: %s)\n", (*lit)->addr.c_str(), (*lit)->port, ((*lit)->encrypted == FALSE) ? "FALSE" : "TRUE");
 			if (dwBufferCount != 1)
 			{
 				dbg_msg("[-] dwBufferCount != 1");
@@ -228,7 +213,7 @@ int __stdcall Hook_WSASend(
 				}
 			}
 			hexdump(lpBuffers[0].buf, *lpNumberOfBytesSent);
-			ParsePacketHeader((BYTE*)lpBuffers[0].buf, *lpNumberOfBytesSent);
+			ParsePacketClient(*lit, (BYTE*)lpBuffers[0].buf, *lpNumberOfBytesSent);
 			break;
   		}
   	}

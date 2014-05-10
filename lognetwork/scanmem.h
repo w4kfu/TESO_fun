@@ -31,6 +31,6 @@ struct CKey
 };
 
 BOOL SuspendAllThreads(BOOL stop);
-BOOL Scan4Key(VOID);
+BOOL Scan4Key(BYTE *PrivateKeyClient_01, BYTE *PrivateKeyClient_02, BYTE *PrivateKeyClient_03, BYTE *PrivateKeyClient_04);
 
 #endif // SCANMEM_H_
