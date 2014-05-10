@@ -193,6 +193,7 @@ int __stdcall Hook_WSARecv(
 				}
 			}
 			hexdump(lpBuffers[0].buf, *lpNumberOfBytesRecvd);
+			ParsePacketServ((BYTE*)lpBuffers[0].buf, *lpNumberOfBytesRecvd);
 			break;
   		}
   	}

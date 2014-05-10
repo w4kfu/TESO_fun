@@ -4,6 +4,7 @@
 #include "dbg.h"
 #include "scanmem.h"
 #include "zlib.h"
+#include "cryptopp/dll.h"
 
 struct PacketBuf
 {
@@ -25,6 +26,8 @@ struct ZLIB_Buffer
 	BYTE	*bUData;
 };
 
-VOID ParsePacketHeader(BYTE *bData, DWORD dwSize);
+VOID ParsePacketServ(BYTE *bData, DWORD dwSize);	// RECV
+
+VOID ParsePacketHeader(BYTE *bData, DWORD dwSize);	// SEND
 
 #endif // PACKET_H_

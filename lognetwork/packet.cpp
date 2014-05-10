@@ -142,6 +142,7 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	if (GetZlibBuffer(p, &zlib_00) == FALSE)
 		return;
 	//hexdump(zlib_00.bData, zlib_00.comp_size);
+	printf("[+] Key_pub_04\n");
 	UncompZlibBuffer(&zlib_00);
 	if (GetDword(p, &unk_dword_01) == FALSE)
 		return;
@@ -155,19 +156,23 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	if (GetZlibBuffer(p, &zlib_01) == FALSE)
 		return;
 	//hexdump(zlib_01.bData, zlib_01.comp_size);
+	printf("[+] Key_pub_03\n");
 	UncompZlibBuffer(&zlib_01);
 	if (GetZlibBuffer(p, &zlib_02) == FALSE)
 		return;
 	//hexdump(zlib_02.bData, zlib_02.comp_size);
+	printf("[+] Key_pub_01\n");
 	UncompZlibBuffer(&zlib_02);
 	if (GetZlibBuffer(p, &zlib_03) == FALSE)
 		return;
 	//hexdump(zlib_03.bData, zlib_03.comp_size);
 	UncompZlibBuffer(&zlib_03);
+	printf("[+] Key_pub_02\n");
 	if (GetZlibBuffer(p, &zlib_04) == FALSE)
 		return;
 	//hexdump(zlib_04.bData, zlib_04.comp_size);
 	UncompZlibBuffer(&zlib_04);
+	printf("[+] Key_pub_05\n");
 	if (GetDword(p, &unk_dword_04) == FALSE)
 		return;
 	dbg_msg("\t[+] unk_dword_04 = %08X\n", unk_dword_04);
@@ -185,16 +190,68 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	CleanZlibBuffer(&zlib_04);
 }
 
+VOID Handle_0x2B08(struct PacketBuf *p)
+{
+	BYTE unk_byte_00 = 0;
+
+	struct ZLIB_Buffer zlib_00 = {0};
+	struct ZLIB_Buffer zlib_01 = {0};
+	struct ZLIB_Buffer zlib_02 = {0};
+	struct ZLIB_Buffer zlib_03 = {0};
+	struct ZLIB_Buffer zlib_04 = {0};
+
+	if (GetByte(p, &unk_byte_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);	
+	if (GetZlibBuffer(p, &zlib_00) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_00);
+	if (GetZlibBuffer(p, &zlib_01) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_01);
+	if (GetZlibBuffer(p, &zlib_02) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_02);
+	if (GetZlibBuffer(p, &zlib_03) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_03);
+	if (GetZlibBuffer(p, &zlib_04) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_04);
+	CleanZlibBuffer(&zlib_00);
+	CleanZlibBuffer(&zlib_01);
+	CleanZlibBuffer(&zlib_02);
+	CleanZlibBuffer(&zlib_03);
+	CleanZlibBuffer(&zlib_04);
+}
+
 VOID HandleOpcode(WORD Opcode, struct PacketBuf *p)
 {
 	switch (Opcode)
 	{
+		case 0x2B08:
+			Handle_0x2B08(p);
+			break;
 		case 0x2B10:
 			Handle_0x2B10(p);
 			break;
 		default:
 			dbg_msg("[-] Unknow opcode : %04X\n", Opcode);
 	}
+}
+
+VOID ParsePacketServ(BYTE *bData, DWORD dwSize)
+{
+	struct PacketBuf p = {0};
+	WORD Opcode = 0;
+
+	if (dwSize <= 4)
+		return;
+	p.dwSize = dwSize;
+	p.bData = bData;
+	if (GetWord(&p, &Opcode) == FALSE)
+		return;
+	HandleOpcode(Opcode, &p);
 }
 
 VOID ParsePacketHeader(BYTE *bData, DWORD dwSize)
