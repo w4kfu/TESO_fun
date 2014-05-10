@@ -10,7 +10,7 @@ void dbg_msg(char *format, ...)
 
   va_start(args, format);
   memset(buffer, 0, sizeof (buffer));
-  vsprintf_s(buffer, sizeof (buffer), format, args);
+  vsprintf_s(buffer, sizeof (buffer) - 1, format, args);
   if (!init)
   {
 	   fopen_s(&fp, FILE_DBG, "w");

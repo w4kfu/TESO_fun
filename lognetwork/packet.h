@@ -2,6 +2,7 @@
 #define PACKET_H_
 
 #include "dbg.h"
+#include "scanmem.h"
 
 struct PacketBuf
 {

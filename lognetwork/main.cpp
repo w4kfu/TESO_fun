@@ -35,6 +35,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
 LONG CALLBACK ProtectionFaultVectoredHandler(PEXCEPTION_POINTERS ExceptionInfo)
 {
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_GUARD_PAGE_VIOLATION)
+		return EXCEPTION_CONTINUE_EXECUTION;
 	//dbg_msg("Exception Code : %08X ; EIP : %08X\n", ExceptionInfo->ExceptionRecord->ExceptionCode, ExceptionInfo->ContextRecord->Eip);
 	return EXCEPTION_CONTINUE_SEARCH;
 }

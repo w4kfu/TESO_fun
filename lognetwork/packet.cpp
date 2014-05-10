@@ -83,6 +83,16 @@ BOOL GetZlibBuffer(struct PacketBuf *packet, struct ZLIB_Buffer *value)
 	return TRUE;
 }
 
+VOID ManageCrypto(VOID)
+{
+	SuspendAllThreads(TRUE);
+
+	Scan4Key();
+	//Sleep(4000);
+
+	SuspendAllThreads(FALSE);
+}
+
 VOID Handle_0x2B10(struct PacketBuf *p)
 {
 	struct TESO_Buffer token = {0};
@@ -142,6 +152,7 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	if (GetBuffer(p, &language) == FALSE)
 		return;
 	dbg_msg("\t[+] language = %s\n", language.bData);
+	ManageCrypto();
 }
 
 VOID HandleOpcode(WORD Opcode, struct PacketBuf *p)
