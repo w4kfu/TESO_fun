@@ -106,7 +106,15 @@ VOID CleanZlibBuffer(struct ZLIB_Buffer *zlib)
 VOID GetPrivateKey(struct SockMonitor *smon)
 {
 	SuspendAllThreads(TRUE);
-	Scan4Key(smon->PrivateKeyClient_01, smon->PrivateKeyClient_02, smon->PrivateKeyClient_03, smon->PrivateKeyClient_04);
+	if (Scan4Key(smon->PrivateKeyClient_01, smon->PrivateKeyClient_02, smon->PrivateKeyClient_03, smon->PrivateKeyClient_04) == FALSE)
+	{
+		dbg_msg("[+] Relaunch scan ...\n");
+		if (Scan4Key(smon->PrivateKeyClient_01, smon->PrivateKeyClient_02, smon->PrivateKeyClient_03, smon->PrivateKeyClient_04) == FALSE)
+		{
+			dbg_msg("[+] Failed to find private key\n");
+			ExitProcess(0);
+		}
+	}
 	//Sleep(4000);
 	SuspendAllThreads(FALSE);
 }
@@ -167,7 +175,7 @@ VOID GenAESKey(struct SockMonitor *smon, BYTE *key_01_pub_server, BYTE *key_04_p
 
 	SecByteBlock key2(SHA256::DIGESTSIZE);
 	SHA256().CalculateDigest(key2, sharedA, sharedA.size()); 
-	smon->d_send.SetKeyWithIV(key, aesKeyLength, IV);	
+	smon->d_send.SetKeyWithIV(key2, aesKeyLength, IV);
 }
 
 VOID Handle_0x2B10(struct SockMonitor *smon, struct PacketBuf *p)
@@ -235,7 +243,7 @@ VOID Handle_0x2B10(struct SockMonitor *smon, struct PacketBuf *p)
 	dbg_msg("\t[+] unk_dword_04 = %08X\n", unk_dword_04);
 	if (GetByte(p, &unk_byte_00) == FALSE)
 		return;
-	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);
+	dbg_msg("\t[+] unk_byte_00 = %02X\n", unk_byte_00);
 	if (GetBuffer(p, &language) == FALSE)
 		return;
 	dbg_msg("\t[+] language = %s\n", language.bData);
@@ -294,10 +302,132 @@ VOID Handle_0x2B08(struct SockMonitor *smon, struct PacketBuf *p)
 	CleanZlibBuffer(&zlib_04);
 }
 
+
+VOID Handle_0x0110(struct SockMonitor *smon, struct PacketBuf *p)
+{
+	struct TESO_Buffer username = {0};
+	struct TESO_Buffer language = {0};
+	DWORD unk_dword_00 = 0;
+	struct ZLIB_Buffer zlib_00 = {0};
+	BYTE unk_byte_00 = 0;
+	DWORD unk_dword_01 = 0;
+	DWORD unk_dword_02 = 0;
+	struct ZLIB_Buffer zlib_01 = {0};
+	struct ZLIB_Buffer zlib_02 = {0};
+	struct ZLIB_Buffer zlib_03 = {0};
+	struct ZLIB_Buffer zlib_04 = {0};
+	DWORD unk_dword_03 = 0;
+	struct TESO_Buffer version = {0};
+	struct TESO_Buffer uuid = {0};
+
+	if (GetBuffer(p, &username) == FALSE)
+		return;
+	dbg_msg("\t[+] username = %s\n", username.bData);
+	if (GetBuffer(p, &language) == FALSE)
+		return;
+	dbg_msg("\t[+] language = %s\n", language.bData);
+	if (GetDword(p, &unk_dword_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_00 = %08X\n", unk_dword_00);
+	if (GetZlibBuffer(p, &zlib_00) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_00);
+	if (GetByte(p, &unk_byte_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);	
+	if (GetDword(p, &unk_dword_01) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_01 = %08X\n", unk_dword_01);
+	if (GetDword(p, &unk_dword_02) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_02 = %08X\n", unk_dword_02);
+	if (GetZlibBuffer(p, &zlib_01) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_01);
+	if (GetZlibBuffer(p, &zlib_02) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_02);
+	if (GetZlibBuffer(p, &zlib_03) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_03);
+	if (GetZlibBuffer(p, &zlib_04) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_04);
+	if (GetDword(p, &unk_dword_03) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_03 = %08X\n", unk_dword_03);
+	if (GetBuffer(p, &version) == FALSE)
+		return;
+	dbg_msg("\t[+] version = %s\n", version.bData);
+	if (GetBuffer(p, &uuid) == FALSE)
+		return;
+	dbg_msg("\t[+] uuid = %s\n", uuid.bData);
+	GetPrivateKey(smon);
+	CleanZlibBuffer(&zlib_00);
+	CleanZlibBuffer(&zlib_01);
+	CleanZlibBuffer(&zlib_02);
+	CleanZlibBuffer(&zlib_03);
+	CleanZlibBuffer(&zlib_04);
+}
+
+VOID Handle_0x010B(struct SockMonitor *smon, struct PacketBuf *p)
+{
+	BYTE unk_byte_00 = 0;
+	struct ZLIB_Buffer zlib_00 = {0};
+	struct ZLIB_Buffer zlib_01 = {0};
+	struct ZLIB_Buffer zlib_02 = {0};
+	struct ZLIB_Buffer zlib_03 = {0};
+	struct ZLIB_Buffer zlib_04 = {0};
+
+	if (GetByte(p, &unk_byte_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);	
+	if (GetZlibBuffer(p, &zlib_00) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_00);
+	if (GetZlibBuffer(p, &zlib_01) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_01);
+	if (GetZlibBuffer(p, &zlib_02) == FALSE)	// IV ?
+		return;
+	UncompZlibBuffer(&zlib_02);
+	if (GetZlibBuffer(p, &zlib_03) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_03);
+	if (GetZlibBuffer(p, &zlib_04) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_04);
+	GenAESKey(smon, zlib_00.bUData, zlib_04.bUData, zlib_02.bUData);
+	CleanZlibBuffer(&zlib_00);
+	CleanZlibBuffer(&zlib_01);
+	CleanZlibBuffer(&zlib_02);
+	CleanZlibBuffer(&zlib_03);
+	CleanZlibBuffer(&zlib_04);
+}
+
+VOID Handle_0x010A(struct SockMonitor *smon, struct PacketBuf *p)
+{
+	BYTE unk_byte_00 = 0;
+
+	if (GetByte(p, &unk_byte_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_byte_00 = %08X\n", unk_byte_00);
+	smon->encrypted = TRUE;
+}
+
 VOID HandleOpcode(struct SockMonitor *smon, WORD Opcode, struct PacketBuf *p)
 {
 	switch (Opcode)
 	{
+		case 0x010A:
+			Handle_0x010A(smon, p);
+			break;
+		case 0x010B:
+			Handle_0x010B(smon, p);
+			break;
+		case 0x0110:
+			Handle_0x0110(smon, p);
+			break;			
 		case 0x2B08:
 			Handle_0x2B08(smon, p);
 			break;
@@ -343,7 +473,10 @@ VOID ParsePacketServ(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
 	}
 	if (GetWord(&p, &Opcode) == FALSE)
 		return;
+	dbg_msg("[+] Opcode = %04X\n", Opcode);
 	HandleOpcode(smon, Opcode, &p);
+	if (bDecData != NULL)
+		free(bDecData);
 }
 
 VOID ParsePacketClient(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
@@ -355,6 +488,7 @@ VOID ParsePacketClient(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
 	WORD NS_streamID = 0;
 	DWORD dwDataSize = 0;
 	WORD Opcode = 0;
+	BYTE *bDecData = NULL;
 
 	if (dwSize == 1)
 	{
@@ -363,6 +497,21 @@ VOID ParsePacketClient(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
 	pHeader.dwSize = dwSize;
 	pHeader.bData = bData;
 	GetDword(&pHeader, &dwPacketSize);
+	if (smon->encrypted == TRUE)
+	{
+		bDecData = (BYTE*)malloc(sizeof (char) * dwPacketSize);
+		if (bDecData == NULL)
+		{
+			dbg_msg("[-] ParsePacketClient - malloc failed\n");
+			return;
+		}
+		smon->d_send.ProcessData((byte*)bDecData, (byte*)(pHeader.bData + 1), dwPacketSize - 1);
+		dbg_msg("[+] Decrypted :\n");
+		hexdump(bDecData, dwPacketSize - 1);
+		pHeader.bData = bDecData;
+		pHeader.dwSize = dwPacketSize - 1;
+		GetDword(&pHeader, &dwDataSize);
+	}
 	//pHeader.dwSize = dwPacketSize;
 	if (GetWord(&pHeader, &NS_version) == FALSE)
 		return;
@@ -381,5 +530,7 @@ VOID ParsePacketClient(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
 	HandleOpcode(smon, Opcode, &p);
 	if (p.dwSize != 0)
 		dbg_msg("[+] Data left = %d\n", p.dwSize);
+	if (bDecData != NULL)
+		free(bDecData);
 }
 

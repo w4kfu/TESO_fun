@@ -127,7 +127,7 @@ BOOL Scan4Key(BYTE *PrivateKeyClient_01, BYTE *PrivateKeyClient_02, BYTE *Privat
 						ckey->dwKeyPubSize_04 == 0x80 && ckey->dwKeyPrivSize_04 == 0x14 &&
 						ckey->dwKeyPubSize_05 == 0x80 && ckey->dwKeyPrivSize_05 == 0x14)
 					{
-						dbg_msg("[+] FOUND !\n");
+						dbg_msg("[+] FOUND at %08X!\n", (DWORD)(i + j * 0x1000));
 						DumpKeys(ckey);
 						memcpy(PrivateKeyClient_01, ckey->bKeyPriv_01, 0x14);
 						memcpy(PrivateKeyClient_02, ckey->bKeyPriv_02, 0x14);
