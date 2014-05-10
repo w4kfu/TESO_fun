@@ -3,6 +3,7 @@
 
 #include "dbg.h"
 #include "scanmem.h"
+#include "zlib.h"
 
 struct PacketBuf
 {
@@ -21,6 +22,7 @@ struct ZLIB_Buffer
 	DWORD	uncomp_size;
 	DWORD	comp_size;
 	BYTE	*bData;
+	BYTE	*bUData;
 };
 
 VOID ParsePacketHeader(BYTE *bData, DWORD dwSize);

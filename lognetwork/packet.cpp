@@ -83,6 +83,26 @@ BOOL GetZlibBuffer(struct PacketBuf *packet, struct ZLIB_Buffer *value)
 	return TRUE;
 }
 
+BOOL UncompZlibBuffer(struct ZLIB_Buffer *zlib)
+{
+	zlib->bUData = (BYTE*)malloc(sizeof (char) * zlib->uncomp_size);
+	if (zlib->bUData == NULL)
+		return FALSE;
+	if (uncompress(zlib->bUData, &zlib->uncomp_size, zlib->bData, zlib->comp_size) != Z_OK)
+	{
+		dbg_msg("[-] UncompZlibBuffer - uncompress failed\n");
+		return FALSE;
+	}
+	hexdump(zlib->bUData, zlib->uncomp_size);
+	return TRUE;
+}
+
+VOID CleanZlibBuffer(struct ZLIB_Buffer *zlib)
+{
+	if (zlib->bUData != NULL)
+		free(zlib->bUData);
+}
+
 VOID ManageCrypto(VOID)
 {
 	SuspendAllThreads(TRUE);
@@ -121,7 +141,8 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	dbg_msg("\t[+] unk_dword_00 = %08X\n", unk_dword_00);
 	if (GetZlibBuffer(p, &zlib_00) == FALSE)
 		return;
-	hexdump(zlib_00.bData, zlib_00.comp_size);
+	//hexdump(zlib_00.bData, zlib_00.comp_size);
+	UncompZlibBuffer(&zlib_00);
 	if (GetDword(p, &unk_dword_01) == FALSE)
 		return;
 	dbg_msg("\t[+] unk_dword_01 = %08X\n", unk_dword_01);
@@ -133,16 +154,20 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 	dbg_msg("\t[+] unk_dword_03 = %08X\n", unk_dword_03);
 	if (GetZlibBuffer(p, &zlib_01) == FALSE)
 		return;
-	hexdump(zlib_01.bData, zlib_01.comp_size);
+	//hexdump(zlib_01.bData, zlib_01.comp_size);
+	UncompZlibBuffer(&zlib_01);
 	if (GetZlibBuffer(p, &zlib_02) == FALSE)
 		return;
-	hexdump(zlib_02.bData, zlib_02.comp_size);
+	//hexdump(zlib_02.bData, zlib_02.comp_size);
+	UncompZlibBuffer(&zlib_02);
 	if (GetZlibBuffer(p, &zlib_03) == FALSE)
 		return;
-	hexdump(zlib_03.bData, zlib_03.comp_size);
+	//hexdump(zlib_03.bData, zlib_03.comp_size);
+	UncompZlibBuffer(&zlib_03);
 	if (GetZlibBuffer(p, &zlib_04) == FALSE)
 		return;
-	hexdump(zlib_04.bData, zlib_04.comp_size);
+	//hexdump(zlib_04.bData, zlib_04.comp_size);
+	UncompZlibBuffer(&zlib_04);
 	if (GetDword(p, &unk_dword_04) == FALSE)
 		return;
 	dbg_msg("\t[+] unk_dword_04 = %08X\n", unk_dword_04);
@@ -153,6 +178,11 @@ VOID Handle_0x2B10(struct PacketBuf *p)
 		return;
 	dbg_msg("\t[+] language = %s\n", language.bData);
 	ManageCrypto();
+	CleanZlibBuffer(&zlib_00);
+	CleanZlibBuffer(&zlib_01);
+	CleanZlibBuffer(&zlib_02);
+	CleanZlibBuffer(&zlib_03);
+	CleanZlibBuffer(&zlib_04);
 }
 
 VOID HandleOpcode(WORD Opcode, struct PacketBuf *p)

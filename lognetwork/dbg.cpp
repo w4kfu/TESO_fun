@@ -1,6 +1,18 @@
 #include "dbg.h"
 
 int init = 0;
+char FileName[MAX_PATH] = {0};
+
+VOID InitDbgFileName(VOID)
+{
+  char buff[20];
+  struct tm sTm;
+  time_t now = time (0);
+  
+  gmtime_s(&sTm, &now);
+  strftime(buff, sizeof(buff), "%Y_%m_%d-%H_%M_%S", &sTm);
+  sprintf_s(FileName, sizeof(FileName), "%s_log.txt", buff);
+}
 
 void dbg_msg(char *format, ...)
 {
@@ -13,11 +25,12 @@ void dbg_msg(char *format, ...)
   vsprintf_s(buffer, sizeof (buffer) - 1, format, args);
   if (!init)
   {
-	   fopen_s(&fp, FILE_DBG, "w");
+    InitDbgFileName();
+    fopen_s(&fp, FileName, "w");
     init = 1;
   }
   else
-	  fopen_s(&fp, FILE_DBG, "a");
+	  fopen_s(&fp, FileName, "a");
   va_end(args);
   fprintf(fp, "%s", buffer);
   printf("%s", buffer);
