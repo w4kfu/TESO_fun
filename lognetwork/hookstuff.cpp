@@ -193,6 +193,7 @@ int __stdcall Hook_WSARecv(
 				}
 			}
 			hexdump(lpBuffers[0].buf, *lpNumberOfBytesRecvd);
+			break;
   		}
   	}
 	return (ret);
@@ -226,6 +227,8 @@ int __stdcall Hook_WSASend(
 				}
 			}
 			hexdump(lpBuffers[0].buf, *lpNumberOfBytesSent);
+			ParsePacketHeader((BYTE*)lpBuffers[0].buf, *lpNumberOfBytesSent);
+			break;
   		}
   	}
 	return (ret);

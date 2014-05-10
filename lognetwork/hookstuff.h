@@ -13,6 +13,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #include "dbg.h"
+#include "packet.h"
 
 #define LDE_X86 0
 

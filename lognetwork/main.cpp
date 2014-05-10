@@ -4,6 +4,7 @@
 
 #include "dbg.h"
 #include "hookstuff.h"
+#include "packet.h"
 
 PVOID protVectoredHandler;
 
