@@ -427,10 +427,60 @@ VOID Handle_0x010A(struct SockMonitor *smon, struct PacketBuf *p)
 	smon->encrypted = TRUE;
 }
 
+VOID Handle_0x0100(struct SockMonitor *smon, struct PacketBuf *p)
+{
+	DWORD unk_dword_00 = 0;
+	DWORD unk_dword_01 = 0;
+	DWORD unk_dword_02 = 0;
+	DWORD unk_dword_03 = 0;
+	struct ZLIB_Buffer zlib_00 = {0};
+	struct ZLIB_Buffer zlib_01 = {0};
+	struct ZLIB_Buffer zlib_02 = {0};
+	struct ZLIB_Buffer zlib_03 = {0};
+	struct ZLIB_Buffer zlib_04 = {0};
+
+	if (GetDword(p, &unk_dword_00) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_00 = %08X\n", unk_dword_00);
+	if (GetDword(p, &unk_dword_01) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_01 = %08X\n", unk_dword_01);
+	if (GetDword(p, &unk_dword_02) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_02 = %08X\n", unk_dword_02);
+	if (GetDword(p, &unk_dword_03) == FALSE)
+		return;
+	dbg_msg("\t[+] unk_dword_03 = %08X\n", unk_dword_03);
+	if (GetZlibBuffer(p, &zlib_00) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_00);
+	if (GetZlibBuffer(p, &zlib_01) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_01);
+	if (GetZlibBuffer(p, &zlib_02) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_02);
+	if (GetZlibBuffer(p, &zlib_03) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_03);
+	if (GetZlibBuffer(p, &zlib_04) == FALSE)
+		return;
+	UncompZlibBuffer(&zlib_04);
+	GetPrivateKey(smon);
+	CleanZlibBuffer(&zlib_00);
+	CleanZlibBuffer(&zlib_01);
+	CleanZlibBuffer(&zlib_02);
+	CleanZlibBuffer(&zlib_03);
+	CleanZlibBuffer(&zlib_04);
+}
+
 VOID HandleOpcode(struct SockMonitor *smon, WORD Opcode, struct PacketBuf *p)
 {
 	switch (Opcode)
 	{
+		case 0x0100:
+			Handle_0x0100(smon, p);
+			break;
 		case 0x010A:
 			Handle_0x010A(smon, p);
 			break;
@@ -502,10 +552,6 @@ VOID ParsePacketClient(struct SockMonitor *smon, BYTE *bData, DWORD dwSize)
 	WORD Opcode = 0;
 	BYTE *bDecData = NULL;
 
-	if (dwSize == 1)
-	{
-		return;
-	}
 	pHeader.dwSize = dwSize;
 	pHeader.bData = bData;
 	GetDword(&pHeader, &dwPacketSize);

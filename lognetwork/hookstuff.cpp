@@ -200,6 +200,10 @@ int __stdcall Hook_WSASend(
   	std::list<SockMonitor*>::const_iterator lit (lsock.begin()), lend(lsock.end());
 
 	ret = Resume_WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, dwFlags, lpOverlapped, lpCompletionRoutine);
+	if (*lpNumberOfBytesSent == 1)
+	{
+		return ret;
+	}
   	for (; lit != lend; ++lit)
   	{
   		if ((*lit)->s == s)
