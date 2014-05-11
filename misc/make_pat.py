@@ -4,20 +4,20 @@ from idautils import *
 
 # Found in crc16.cpp from flair
 def CRC16(data):
-    POLY = 0xA001
+    POLY = 0x8408
     crc = 0xFFFF
     for c in data:
         c = ord(c)
         for i in xrange(0, 8):
-            if (crc ^ c) & 1:
+            if ((crc ^ c) & 1) != 0:
                 crc = (crc >> 1) ^ POLY
             else:
                 crc >>= 1
             c >>= 1
-    c = (~c) & 0xFFFF
+    crc = (~crc)
     data = crc
     crc = (crc << 8) | ((data >> 8) & 0xFF)
-    return crc
+    return (crc & 0xFFFF)
 
 def MakePatFunc(func):
     func_start_ea = func.startEA
