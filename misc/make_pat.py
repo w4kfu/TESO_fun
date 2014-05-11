@@ -54,10 +54,7 @@ def MakePatFunc(func):
             ref_ea = l_ref[0]
             ref_loc_ea = FindRefLoc(ea, ref_ea)
             #print "[-] TODO : %08X" % ref_loc_ea
-            byte_ref.append(ref_loc_ea + 0)
-            byte_ref.append(ref_loc_ea + 1)
-            byte_ref.append(ref_loc_ea + 2)
-            byte_ref.append(ref_loc_ea + 3)
+            byte_ref.extend((ref_loc_ea + 0, ref_loc_ea + 1, ref_loc_ea + 2, ref_loc_ea + 3))
             #return
         else:
             l_ref = [i for i in CodeRefsFrom(ea, 0)]
@@ -68,10 +65,7 @@ def MakePatFunc(func):
                     ref_ea = l_ref[0]
                     ref_loc_ea = FindRefLoc(ea, ref_ea)
                     #print "[-] TODO : %08X" % ref_loc_ea
-                    byte_ref.append(ref_loc_ea + 0)
-                    byte_ref.append(ref_loc_ea + 1)
-                    byte_ref.append(ref_loc_ea + 2)
-                    byte_ref.append(ref_loc_ea + 3)
+                    byte_ref.extend((ref_loc_ea + 0, ref_loc_ea + 1, ref_loc_ea + 2, ref_loc_ea + 3))
                     #return
         ea = NextHead(ea)
     first_str_len = 32 if func_len > 32 else func_len
