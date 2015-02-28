@@ -24,7 +24,7 @@ def bedecode_item(next, token):
         data = []
         tok = next()
         while tok != "e":
-            data.append(decode_item(next, tok))
+            data.append(bedecode_item(next, tok))
             tok = next()
         if token == "d":
             data = dict(zip(data[0::2], data[1::2]))
@@ -43,7 +43,8 @@ def bedecode(text):
     return data
 
 if __name__ == '__main__':
-    data = open("out3/metafile.solid", "rb").read()
+    #data = open("out3/metafile.solid", "rb").read()
+    data = open("UPDATE_OUT/-1to5/metafile.solid", "rb").read()
     torrent = bedecode(data)
     for file in torrent["info"]["files"]:
         print "%r - %d bytes" % ("/".join(file["path"]), file["length"])
