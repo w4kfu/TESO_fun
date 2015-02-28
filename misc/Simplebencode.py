@@ -44,7 +44,7 @@ def bedecode(text):
 
 if __name__ == '__main__':
     #data = open("out3/metafile.solid", "rb").read()
-    data = open("UPDATE_OUT/-1to5/metafile.solid", "rb").read()
+    data = open("UPDATE_OUT/4/metafile.solid", "rb").read()
     torrent = bedecode(data)
     for file in torrent["info"]["files"]:
         print "%r - %d bytes" % ("/".join(file["path"]), file["length"])
