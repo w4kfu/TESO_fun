@@ -231,9 +231,9 @@ if __name__ == '__main__':
     #tz.PrintInfos()
     #tz.ExtractFile("metafile.solid")
 
-    tz = TESOZip("UPDATE_OUT/4/game_player_-1to4.zip", "UPDATE_OUT/4/", True)
-    #tz.PrintInfos()
-    tz.ExtractFile("client/eso.exe")
+    tz = TESOZip("UPDATE_OUT/10/game_player_-1to10.zip", "UPDATE_OUT/10/", True)
+    tz.PrintInfos()
+    #tz.ExtractFile("client/eso.exe")
 
     #f = rmpe("UPDATE_OUT/4/game_player_-1to4.solidpkg")
     #zp = zipfile.ZipFile(f)

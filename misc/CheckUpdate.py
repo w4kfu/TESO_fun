@@ -155,6 +155,7 @@ class Release:
         if tz.ExtractFile("client/eso.exe") == False:
             print "[-] Can't extract eso.exe"
             return False
+        print "eso.exe extracted!"
         self.status = ""
         return True
         #pass
@@ -211,7 +212,7 @@ releases = ExtractManifest()
 #for k in releases:
 #    releases[k].GetMetaFile()
 #releases["3"].GetMetaFile()
-releases["2"].Process()
+releases["10"].Process()
 
 #releases["95"].GetMetaFile()
 
