@@ -6,6 +6,7 @@ import elfesteem.pe_init
 from capstone import *
 from capstone.x86 import *
 from Crypto.Cipher import AES
+import shutil
 
 # "Jessie J - Nobodys Perfect (Netsky Remix)"
 
@@ -62,7 +63,7 @@ def GetAES_KEY(buf, pe):
         off_key = pe.virt2off(va_key)
         AES_KEY = buf[off_key:off_key + 16]
         print "[+] AES KEY:"
-        print hexdump(aes_key)
+        print hexdump(AES_KEY)
     if len(pos_2) == 1:
         dst_jmp = (struct.unpack("<I", buf[pos_2[0] + 5 + 1:pos_2[0] + 5 + 1 + 4])[0] + pe.off2virt(pos_2[0]) + 5 + 5) & 0xFFFFFFFF
         off_jmp = pe.virt2off(dst_jmp)
@@ -78,6 +79,7 @@ def SearchStartTable(buf, pos, pe):
     block = []
     section = {}
     start_pos = pos
+    print "pos:  ", hex(pos)
     val = struct.unpack("<I", buf[pos - 8: pos - 4])[0]
     pos = pos - 8
     while struct.unpack("<I", buf[pos - 8: pos - 4])[0] < val: # AND PE VA ETC
@@ -102,27 +104,41 @@ def SearchStartTable(buf, pos, pe):
     return block
     
 def GetBlockOffset(buf, pe):
-    for m in re.finditer("\xFF\xFF\xFF\xFF....\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", buf):
-        pos = m.start()
-        val_1 = struct.unpack("<I", buf[pos - 8: pos - 4])[0]
-        val_2 = struct.unpack("<I", buf[pos - 16: pos - 12])[0]
-        val_3 = struct.unpack("<I", buf[pos - 24: pos - 20])[0]
-        val_4 = struct.unpack("<I", buf[pos - 32: pos - 28])[0]
-        if val_2 < val_1 and val_3 < val_2 and val_4 < val_3:
-            return SearchStartTable(buf, pos, pe)
+    #print hexdump(buf[0x1A73980:0x1A73990])
+    for i in xrange(0, len(buf) - 0x10):
+        if buf[i] == "\x00" and buf[i + 1] == "\xFF" and buf[i + 2] == "\xFF" and buf[i + 3] == "\xFF" and buf[i + 4] == "\xFF": 
+            if buf[i + 5] != "\xFF" or buf[i + 6] != "\xFF" or buf[i + 7] != "\xFF" or buf[i + 8] != "\xFF":
+                if buf[i + 9] == "\xFF" and buf[i + 10] == "\xFF" and buf[i + 11] == "\xFF" and buf[i + 12] == "\xFF" and buf[i + 13] == "\xFF":
+                    #print "FOUND!"
+                    pos = i + 1
+    #for m in re.finditer('\xff\xff\xff\xff....\xff\xff\xff\xff\xff\xff\xff\xff', buf):
+        #pos = m.start()
+        #if pos > 0x1A73900 and pos < 0x1A73990:
+        #    print "m.start() : " + hex(pos)
+                    val_1 = struct.unpack("<I", buf[pos - 8: pos - 4])[0]
+                    #print hex(val_1)
+                    val_2 = struct.unpack("<I", buf[pos - 16: pos - 12])[0]
+                    val_3 = struct.unpack("<I", buf[pos - 24: pos - 20])[0]
+                    val_4 = struct.unpack("<I", buf[pos - 32: pos - 28])[0]
+                    if val_2 < val_1 and val_3 < val_2 and val_4 < val_3:
+                        return SearchStartTable(buf, pos, pe)
+    return []
             
-def ApplyAES(AESKey, Block, buf, pe):
+def ApplyAES(AESKey, block, buf, pe):
     print hexdump(AESKey)
     obj = AES.new(AESKey, AES.MODE_ECB)
     b = ""
-    for v, s in Block:
+    print hex(block[0][0])
+    print hex(block[-1][0])
+    for v, s in block:
         off = pe.rva2off(v)
         b += buf[off: off + s]
     if len(b) % 16 != 0:
         b += '\x00' * (16 - len(b) % 16)
     bd = obj.decrypt(b)
     print hexdump(bd[:0x10])
-    open("lol.bin", "wb").write(bd)
+    #open("lol.bin", "wb").write(bd)
+    return bd
     
 def TestCheckAES():
     #l = ['EXE_OUT\\2013_12_14-live.703011-eso.exe', 'EXE_OUT\\2013_12_21-live.707462-eso.exe', 'EXE_OUT\\2013_12_31-live.708405-eso.exe', 'EXE_OUT\\2014_01_03-live.709492-eso.exe', 'EXE_OUT\\2014_01_06-live.709717-eso.exe', 'EXE_OUT\\2014_01_10-live.714440-eso.exe', 'EXE_OUT\\2014_01_23-live.722888-eso.exe', 'EXE_OUT\\2014_01_30-live.727776-eso.exe', 'EXE_OUT\\2014_02_03-live.729240-eso.exe', 'EXE_OUT\\2014_02_04-live.730552-eso.exe', 'EXE_OUT\\2014_02_24-live.779987-eso.exe', 'EXE_OUT\\2014_03_03-live.813002-eso.exe', 'EXE_OUT\\2014_03_05-live.853795-eso.exe','EXE_OUT\\2014_03_06-live.872628-eso.exe', 'EXE_OUT\\2014_03_07-live.892895-eso.exe', 'EXE_OUT\\2014_03_11-live.913319-eso.exe', 'EXE_OUT\\2014_03_13-live.932702-eso.exe', 'EXE_OUT\\2014_03_18-live.950966-eso.exe', 'EXE_OUT\\2014_03_20-live.953228-eso.exe', 'EXE_OUT\\2014_03_25-live.956218-eso.exe', 'EXE_OUT\\2014_03_25-live.956797-eso.exe', 'EXE_OUT\\2014_03_31-live.961670-eso.exe', 'EXE_OUT\\2014_04_01-live.962094-eso.exe', 'EXE_OUT\\2014_04_02-live.962845-eso.exe', 'EXE_OUT\\2014_04_05-live.964407-eso.exe', 'EXE_OUT\\2014_04_05-live.964486-eso.exe', 'EXE_OUT\\2014_04_13-live.968198-eso.exe', 'EXE_OUT\\2014_04_15-live.969974-eso.exe', 'EXE_OUT\\2014_04_17-live.971785-eso.exe', 'EXE_OUT\\2014_04_19-live.972476-eso.exe', 'EXE_OUT\\2014_04_25-live.976505-eso.exe', 'EXE_OUT\\2014_05_02-live.980599-eso.exe', 'EXE_OUT\\2014_05_09-live.984658-eso.exe', 'EXE_OUT\\2014_05_19-live.990526-eso.exe', 'EXE_OUT\\2014_05_24-live.995677-eso.exe', 'EXE_OUT\\2014_05_27-live.996465-eso.exe', 'EXE_OUT\\2014_05_30-live.998959-eso.exe', 'EXE_OUT\\2014_06_05-live.1002775-eso.exe', 'EXE_OUT\\2014_06_12-live.1006103-eso.exe','EXE_OUT\\2014_06_22-live.1010890-eso.exe', 'EXE_OUT\\2014_06_26-live.1013841-eso.exe', 'EXE_OUT\\2014_07_01-live.1015265-eso.exe', 'EXE_OUT\\2014_07_03-live.1016351-eso.exe', 'EXE_OUT\\2014_07_07-live.1017350-eso.exe', 'EXE_OUT\\2014_07_18-live.1023797-eso.exe', 'EXE_OUT\\2014_07_31-live.1030847-eso.exe', 'EXE_OUT\\2014_08_07-live.1034504-eso.exe', 'EXE_OUT\\2014_08_12-live.1036379-eso.exe', 'EXE_OUT\\2014_08_21-live.1041552-eso.exe', 'EXE_OUT\\2014_09_13-live.1052207-eso.exe', 'EXE_OUT\\2014_09_16-live.1053773-eso.exe', 'EXE_OUT\\2014_09_18-live.1055280-eso.exe', 'EXE_OUT\\2014_09_27-live.1059112-eso.exe', 'EXE_OUT\\2014_10_06-live.1062940-eso.exe', 'EXE_OUT\\2014_10_07-live.1063187-eso.exe', 'EXE_OUT\\2014_10_09-live.1065307-eso.exe', 'EXE_OUT\\2014_10_14-live.1067458-eso.exe', 'EXE_OUT\\2014_10_31-live.1076350-eso.exe', 'EXE_OUT\\2014_11_07-live.1080596-eso.exe', 'EXE_OUT\\2014_11_11-live.1081567-eso.exe', 'EXE_OUT\\2014_11_13-live.1083564-eso.exe', 'EXE_OUT\\2014_11_21-live.1087242-eso.exe', 'EXE_OUT\\2014_11_25-live.1088592-eso.exe', 'EXE_OUT\\2014_12_04-live.1091904-eso.exe', 'EXE_OUT\\2015_01_08-live.1103478-eso.exe']
@@ -137,8 +153,26 @@ def TestCheckAES():
         ApplyAES(AES_KEY, block, buf, pe)
     print "[+] done"
         
+def Decryptbin(filename="EXE_OUT\\2014_06_12-live.1006103-eso.exe"):
+    buf = open(filename, "rb").read()
+    pe = elfesteem.pe_init.PE(buf)
+    AES_KEY = GetAES_KEY(buf, pe)
+    block = GetBlockOffset(buf, pe)
+    bd = ApplyAES(AES_KEY, block, buf, pe)
+    shutil.copyfile(filename, "out/" + os.path.basename(filename) + "_un.exe")
+    fd = open("out/" + os.path.basename(filename) + "_un.exe", "rb+")
+    pos = 0
+    for v, s in block:
+        off = pe.rva2off(v)
+        fd.seek(off, 0)
+        fd.write(bd[pos: pos + s])
+        pos += s
+    fd.close()
+        
 if __name__ == '__main__':
-    TestCheckAES()
+    #TestCheckAES()
+    #Decryptbin()
+    Decryptbin("EXE_OUT\\2014_06_22-live.1010890-eso.exe")
     sys.exit(42)
     l_packed = []
     l_notpacked = []
